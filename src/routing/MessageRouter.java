@@ -314,6 +314,9 @@ public abstract class MessageRouter {
 		if (m == null) throw new SimError("no message for id " +
 				id + " to send at " + this.host);
 
+		if (this instanceof ActiveRouter) {
+			((ActiveRouter) this).reducePacketTransmissionEnergy();
+		}
 		m2 = m.replicate();	// send a replicate of the message
 		to.receiveMessage(m2, this.host);
 	}
@@ -337,6 +340,9 @@ public abstract class MessageRouter {
 	 * than zero if the other node should try later (e.g. TRY_LATER_BUSY).
 	 */
 	public int receiveMessage(Message m, DTNHost from) {
+		if (this instanceof ActiveRouter) {
+			((ActiveRouter) this).reducePacketReceptionEnergy();
+		}
 		Message newMessage = m.replicate();
 
 		this.putToIncomingBuffer(newMessage, from);

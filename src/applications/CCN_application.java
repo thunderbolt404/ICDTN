@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import routing.ActiveRouter;
 /**
  * @author RUI and Hasan
  */
@@ -332,6 +333,7 @@ public class CCN_application extends Application {
 					i--;
 					continue;
 				}
+				consumeStaticCacheInitWriteEnergy(h);
 				static_cache.put(temp, new Integer(i+1).toString());
 
 				sendEventToListeners("ContentAvailable", String.valueOf(temp), h);
@@ -525,6 +527,7 @@ public class CCN_application extends Application {
 		if(type.equalsIgnoreCase("queryResponse") && ((String)msg.getProperty("content")).isEmpty() == false && msg.getFrom() != host){
 			//It is time to check the PIT table
 			int request_in_int = Integer.parseInt( (String)msg.getProperty("queryMsg") );
+			consumePitLookupEnergy(host);
 			HostToSend host_to_send = this.PIT.get(request_in_int);
 			
 			if(host_to_send != null && this.enablePIT){
@@ -550,18 +553,18 @@ public class CCN_application extends Application {
 					hostsToString = hostsToString.substring(0, hostsToString.length() - 1);
 				}
 				
-				msg.updateProperty("hostsTo", hostsToString);			
+				msg.updateProperty("hostsTo", hostsToString);
+				consumePitRemoveEnergy(host);
 				///remove the record in the PIT table
 				this.PIT.remove(request_in_int);
 			}
 			
-			//add the response to the oppo cache
+			//update opportunistic cache with energy cost
+			consumeOppCacheWriteEnergy(host);
 			oppo_cache.set( request_in_int, (String)msg.getProperty("content") );
-			
-			//if I am an intermedia node, i should add the response to my static cache also
 			if(this.mode == 3 && true_static_cache == 1){
 				if( static_cache.get(request_in_int) == null){
-					///I don't have it in my static cache. Adding it to my static cache
+					consumeStaticCacheWriteEnergy(host);
 					static_cache.put( request_in_int, (String)msg.getProperty("content") );
 				}
 			}
@@ -581,6 +584,7 @@ public class CCN_application extends Application {
 			}
 
 			if(true_oppo_cache >= 1){
+				consumeOppCacheLookupEnergy(host);
 				retrieved_value_from_oppo = oppo_cache.get(request_in_int);
 				if(retrieved_value_from_oppo.isEmpty()){
 					super.sendEventToListeners("oppoCacheMiss", null, host);
@@ -600,6 +604,7 @@ public class CCN_application extends Application {
 			String retrieved_value_from_static = "";
 
 			if(true_static_cache >= 1){
+				consumeStaticCacheLookupEnergy(host);
 				if(static_cache.get(request_in_int) == null){
 					super.sendEventToListeners("staticCacheMiss", null, host);
 				}else{
@@ -659,26 +664,25 @@ public class CCN_application extends Application {
 				print(host + ":lol:" + this.enablePIT);
 
 				if(retrieved_value_from_static.isEmpty() && retrieved_value_from_oppo.isEmpty() && this.enablePIT){
+					consumePitLookupEnergy(host);
 					HostToSend temp_hostToSend = PIT.get(request_in_int);
 					if(temp_hostToSend == null){
 						///this msg has no record in PIT yet, let's create one for it
 						temp_hostToSend = new HostToSend();
 						temp_hostToSend.addHost(msg.getFrom());
+						consumePitInsertEnergy(host);
 						this.PIT.put(request_in_int, temp_hostToSend);
-
-						//test code
-						System.out.println(host + ": add new entry, PIT size:" + PIT.size());
-						print_PIT(host);
 					}
 					else{
 						///currently there is a record for it, we just add to it
 						temp_hostToSend.addHost(msg.getFrom());
-						this.PIT.remove(request_in_int);  //update PIT table
+						consumePitUpdateEnergy(host);
+						this.PIT.remove(request_in_int);
 						this.PIT.put(request_in_int, temp_hostToSend);
 
 						//test code
 						System.out.println(host + ": update entry, PIT size:" + PIT.size());
-				//		print_PIT(host);
+//		//		print_PIT(host);
 						super.sendEventToListeners("forwardingStopListPIT", null, host);
 						return null;
 					}
@@ -1192,6 +1196,87 @@ public class CCN_application extends Application {
 		//	System.out.println("Looking for unpopular content");
 		}
 		return popularContent[contentRank];
+	}
+
+	private void consumeStaticCacheLookupEnergy(DTNHost host) {
+		if (host == null || host.getRouter() == null) {
+			return;
+		}
+		if (host.getRouter() instanceof ActiveRouter) {
+			((ActiveRouter) host.getRouter()).reduceStaticCacheLookupEnergy();
+		}
+	}
+
+	private void consumeStaticCacheWriteEnergy(DTNHost host) {
+		if (host == null || host.getRouter() == null) {
+			return;
+		}
+		if (host.getRouter() instanceof ActiveRouter) {
+			((ActiveRouter) host.getRouter()).reduceStaticCacheWriteEnergy();
+		}
+	}
+
+	private void consumeStaticCacheInitWriteEnergy(DTNHost host) {
+		if (host == null || host.getRouter() == null) {
+			return;
+		}
+		if (host.getRouter() instanceof ActiveRouter) {
+			((ActiveRouter) host.getRouter()).reduceStaticCacheInitWriteEnergy();
+		}
+	}
+
+	private void consumeOppCacheLookupEnergy(DTNHost host) {
+		if (host == null || host.getRouter() == null) {
+			return;
+		}
+		if (host.getRouter() instanceof ActiveRouter) {
+			((ActiveRouter) host.getRouter()).reduceOppCacheLookupEnergy();
+		}
+	}
+
+	private void consumeOppCacheWriteEnergy(DTNHost host) {
+		if (host == null || host.getRouter() == null) {
+			return;
+		}
+		if (host.getRouter() instanceof ActiveRouter) {
+			((ActiveRouter) host.getRouter()).reduceOppCacheWriteEnergy();
+		}
+	}
+
+	private void consumePitLookupEnergy(DTNHost host) {
+		if (host == null || host.getRouter() == null) {
+			return;
+		}
+		if (host.getRouter() instanceof ActiveRouter) {
+			((ActiveRouter) host.getRouter()).reducePitLookupEnergy();
+		}
+	}
+
+	private void consumePitInsertEnergy(DTNHost host) {
+		if (host == null || host.getRouter() == null) {
+			return;
+		}
+		if (host.getRouter() instanceof ActiveRouter) {
+			((ActiveRouter) host.getRouter()).reducePitInsertEnergy();
+		}
+	}
+
+	private void consumePitUpdateEnergy(DTNHost host) {
+		if (host == null || host.getRouter() == null) {
+			return;
+		}
+		if (host.getRouter() instanceof ActiveRouter) {
+			((ActiveRouter) host.getRouter()).reducePitUpdateEnergy();
+		}
+	}
+
+	private void consumePitRemoveEnergy(DTNHost host) {
+		if (host == null || host.getRouter() == null) {
+			return;
+		}
+		if (host.getRouter() instanceof ActiveRouter) {
+			((ActiveRouter) host.getRouter()).reducePitRemoveEnergy();
+		}
 	}
 }
 

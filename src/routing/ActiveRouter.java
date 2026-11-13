@@ -94,9 +94,7 @@ public abstract class ActiveRouter extends MessageRouter {
 	 */
 	@Override
 	public void changedConnection(Connection con) {
-		if (this.energy != null && con.isUp() && !con.isInitiator(getHost())) {
-			this.energy.reduceDiscoveryEnergy();
-		}
+		// CCN-only accounting does not include radio discovery energy.
 	}
 
 	@Override
@@ -188,6 +186,7 @@ public abstract class ActiveRouter extends MessageRouter {
 
 		retVal = con.startTransfer(getHost(), m);
 		if (retVal == RCV_OK) { // started transfer
+			reducePacketTransmissionEnergy();
 			addToSendingConnections(con);
 		}
 		else if (deleteDelivered && retVal == DENIED_OLD &&
@@ -647,6 +646,10 @@ public abstract class ActiveRouter extends MessageRouter {
 	 */
 	protected void transferDone(Connection con) { }
 
+	public EnergyModel getEnergyModel() {
+		return this.energy;
+	}
+
 	@Override
 	public RoutingInfo getRoutingInfo() {
 		RoutingInfo top = super.getRoutingInfo();
@@ -657,4 +660,73 @@ public abstract class ActiveRouter extends MessageRouter {
 		return top;
 	}
 
+	/**
+	 * Reduces the energy reserve for the amount that is used when looking up entries
+	 * in the PIT.
+	 */
+	public void reducePitLookupEnergy() {
+		if (this.energy != null) {
+			this.energy.reducePitLookupEnergy();
+		}
+	}
+
+	public void reducePitInsertEnergy() {
+		if (this.energy != null) {
+			this.energy.reducePitInsertEnergy();
+		}
+	}
+
+	public void reducePitUpdateEnergy() {
+		if (this.energy != null) {
+			this.energy.reducePitUpdateEnergy();
+		}
+	}
+
+	public void reducePitRemoveEnergy() {
+		if (this.energy != null) {
+			this.energy.reducePitRemoveEnergy();
+		}
+	}
+
+	public void reduceStaticCacheLookupEnergy() {
+		if (this.energy != null) {
+			this.energy.reduceStaticCacheLookupEnergy();
+		}
+	}
+
+	public void reduceStaticCacheWriteEnergy() {
+		if (this.energy != null) {
+			this.energy.reduceStaticCacheWriteEnergy();
+		}
+	}
+
+	public void reduceStaticCacheInitWriteEnergy() {
+		if (this.energy != null) {
+			this.energy.reduceStaticCacheInitWriteEnergy();
+		}
+	}
+
+	public void reducePacketTransmissionEnergy() {
+		if (this.energy != null) {
+			this.energy.reducePacketTransmissionEnergy();
+		}
+	}
+
+	public void reducePacketReceptionEnergy() {
+		if (this.energy != null) {
+			this.energy.reducePacketReceptionEnergy();
+		}
+	}
+
+	public void reduceOppCacheLookupEnergy() {
+		if (this.energy != null) {
+			this.energy.reduceOppCacheLookupEnergy();
+		}
+	}
+
+	public void reduceOppCacheWriteEnergy() {
+		if (this.energy != null) {
+			this.energy.reduceOppCacheWriteEnergy();
+		}
+	}
 }

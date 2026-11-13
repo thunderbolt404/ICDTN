@@ -8,6 +8,8 @@ package report;
 import core.DTNHost;
 import core.SimError;
 import core.UpdateListener;
+import routing.ActiveRouter;
+import routing.util.EnergyModel;
 
 /**
  * Node energy level report. Reports the energy level of all 
@@ -21,13 +23,30 @@ public class EnergyLevelReport extends SnapshotReport
 
 	@Override
 	protected void writeSnapshot(DTNHost h) {
-		Double value = (Double)h.getComBus().
-				getProperty(routing.util.EnergyModel.ENERGY_VALUE_ID);
-			if (value == null) {
-				throw new SimError("Host " + h +
-						" is not using energy model");
-			}
-			write(h.toString() + " " +  format(value));
+		if (!(h.getRouter() instanceof ActiveRouter)) {
+			throw new SimError("Host " + h + " is not using ActiveRouter energy model");
+		}
+
+		EnergyModel model = ((ActiveRouter) h.getRouter()).getEnergyModel();
+		if (model == null) {
+			throw new SimError("Host " + h + " is not using energy model");
+		}
+
+		Double value = model.getEnergy();
+		write(h.toString() + " remaining=" + format(value)
+				+ " consumed=" + format(model.getConsumedEnergy())
+				+ " initial=" + format(model.getInitialEnergy())
+				+ " staticCacheLookup=" + format(model.getStaticCacheLookupEnergy())
+				+ " staticCacheWrite=" + format(model.getStaticCacheWriteEnergy())
+				+ " staticCacheInitWrite=" + format(model.getStaticCacheInitWriteEnergy())
+				+ " packetTx=" + format(model.getPacketTransmissionEnergy())
+				+ " packetRx=" + format(model.getPacketReceptionEnergy())
+				+ " oppCacheLookup=" + format(model.getOppCacheLookupEnergy())
+				+ " oppCacheWrite=" + format(model.getOppCacheWriteEnergy())
+				+ " pitLookup=" + format(model.getPitLookupEnergy())
+				+ " pitInsert=" + format(model.getPitInsertEnergy())
+				+ " pitUpdate=" + format(model.getPitUpdateEnergy())
+				+ " pitRemove=" + format(model.getPitRemoveEnergy()));
 	}
 
 }

@@ -223,11 +223,32 @@ Group14.speed = 0,0
 
 
 
+## Energy settings
+Group.initialEnergy = 100
+Group.scanEnergy = 1
+Group.scanResponseEnergy = 1
+Group.transmitEnergy = 1
+Group.pitLookupEnergy = 1
+Group.pitInsertEnergy = 1
+Group.pitUpdateEnergy = 1
+Group.pitRemoveEnergy = 1
+Group.staticCacheLookupEnergy = 1
+Group.staticCacheWriteEnergy = 1
+Group.staticCacheInitWriteEnergy = 1
+Group.packetTransmissionEnergy = 1
+Group.packetReceptionEnergy = 1
+Group.oppoCacheLookupEnergy = 1
+Group.oppoCacheWriteEnergy = 1
+
 ## Reports
 
-Report.nrofReports = 2
+Report.nrofReports = 4
 Report.report1 = MessageStatsReport
 Report.report2 = CCNApplicationReport
+Report.report3 = CCNEnergySummaryReport
+Report.report4 = EnergyLevelReport
+# aggregate summary at the end of the simulation; no per-node snapshots
+Report.granularity = 60
 Report.warmup = 0
 Report.reportDir = reports/
 
@@ -262,3 +283,19 @@ Events1.prefix = M
 ProphetRouter.secondsInTimeUnit = 30
 SprayAndWaitRouter.nrofCopies = 6
 SprayAndWaitRouter.binaryMode = true
+
+Group.initialEnergy = 100
+Group.scanEnergy = 0.01
+Group.scanResponseEnergy = 0.005
+Group.transmitEnergy = 0.02
+Group.pitLookupEnergy = 0.005
+Group.pitInsertEnergy = 0.01
+Group.pitUpdateEnergy = 0.008
+Group.pitRemoveEnergy = 0.007
+Group.staticCacheLookupEnergy = 0.005
+Group.staticCacheWriteEnergy = 0.01
+Group.staticCacheInitWriteEnergy = 0.02
+Group.packetTransmissionEnergy = 0.015
+Group.packetReceptionEnergy = 0.012
+Group.oppoCacheLookupEnergy = 0.005
+Group.oppoCacheWriteEnergy = 0.01
